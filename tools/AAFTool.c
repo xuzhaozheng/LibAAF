@@ -1166,15 +1166,33 @@ int main( int argc, char *argv[] ) {
 					char posFormatBuf5[POS_FORMAT_BUFFER_LEN];
 					char posFormatBuf6[POS_FORMAT_BUFFER_LEN];
 
-					log( aafi->log, " %s Clip (%u):  Start: %s%s%s  Len: %s%s%s  End: %s%s%s  SourceOffset: %s%s%s  Channels: %s%i%s",
+					/*
+					 * we don't care about the value returned, we just need the function to
+					 * check whether or not clip length exceed one of the source file length
+					 * and print a warning.
+					 */
+					char clipLenBiggerThanSource = 0;
+
+					aafi_getClipLength( aafi, audioClip, &displaySamplerate, &clipLenBiggerThanSource );
+
+					/*
+						aafPosition_t clipLen = aafi_getClipLength( aafi, audioClip, &displaySamplerate, &clipLenBiggerThanSource );
+						if ( clipLen == 0 || clipLen != aafi_convertUnit( audioClip->len, audioClip->track->edit_rate, &displaySamplerate ) ) {
+							printf(" Clip Len = %li\n", clipLen);
+						}
+					*/
+
+					log( aafi->log, " %s Clip (%u):  Start: %s%s%s  Len: %s%s%s%s%s  End: %s%s%s  SourceOffset: %s%s%s  Channels: %s%i%s",
 						( trackLineItemCounter < totalTrackLineItems ) ? TREE_ENTRY : TREE_LAST_ENTRY,
 						aafi_get_clipIndex(audioClip),
 						ANSI_COLOR_DARKGREY(aafi->log),
 						formatPosValue( (audioClip->pos + sessionStart),                  audioClip->track->edit_rate, posFormat, tcFormat, &displaySamplerate, posFormatBuf1 ),
 						ANSI_COLOR_RESET(aafi->log),
 
-						ANSI_COLOR_DARKGREY(aafi->log),
+						(clipLenBiggerThanSource) ? ANSI_COLOR_RED(aafi->log) : ANSI_COLOR_DARKGREY(aafi->log),
 						formatPosValue( (audioClip->len),                                 audioClip->track->edit_rate, posFormat, tcFormat, &displaySamplerate, posFormatBuf2 ),
+						(clipLenBiggerThanSource) ? " (out of range !)" : "",
+						(clipLenBiggerThanSource) ? ANSI_COLOR_RESET(aafi->log) : "",
 						ANSI_COLOR_RESET(aafi->log),
 
 						ANSI_COLOR_DARKGREY(aafi->log),
